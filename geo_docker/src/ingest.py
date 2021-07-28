@@ -39,6 +39,8 @@ def read_labels(spark: Type[SparkSession], labels_filename: str, labels_schema: 
 
 def merge_labels(labels_df: Type[DataFrame], user_df: Type[DataFrame]) -> Type[DataFrame]:
 
+    # merge labels with trajectory if labels.StartTime < trajectory.StepTimestamp < labels.EndTime
+    # label 0 means unknown label
     if labels_df:
         cond = [(user_df['StepTimestamp'] >= labels_df['StartTime']) & (user_df['StepTimestamp'] <= labels_df["EndTime"])]
         return user_df.join(labels_df, cond, "left")\
@@ -48,7 +50,13 @@ def merge_labels(labels_df: Type[DataFrame], user_df: Type[DataFrame]) -> Type[D
         return user_df.withColumn('Label', lit(0))
 
 
-def read_user_trajectory(spark: Type[SparkSession], trajectory_filename: str, trajectory_schema: Type[StructType], user_id: str, current_run_timestamp) -> Type[DataFrame]:
+def flatten(pair):
+    f, text = pair
+    return [line.split(",") + [f] for line in text.splitlines()][6:]
+ 
+      
+
+def read_user_trajectories(spark: Type[SparkSession], trajectory_dir: str, trajectory_schema: Type[StructType], user_id: str, current_run_timestamp) -> Type[DataFrame]:
 
     '''
     Data Format:
@@ -61,18 +69,17 @@ def read_user_trajectory(spark: Type[SparkSession], trajectory_filename: str, tr
         IngestionTime |UserId| TrajectoryID| Latitude| Longitude| Altitude| StepTimestamp
         2021-07-28 18:02:02| 021| 20070503005908| 28.9177333333333| 118.052183333333| 5134.51443569554| 2007-05-03 00:59:08
     '''
-    trajectory_id = os.path.basename(trajectory_filename).replace('.plt','')
-    data = spark.sparkContext.textFile(trajectory_filename)\
-                      .zipWithIndex()\
-                      .filter(lambda row: row[1] >= 6)\
-                      .map(lambda row: row[0])\
-                      .map(lambda x: x.split(','))\
-                      .map(lambda x: [current_run_timestamp, user_id, trajectory_id, float(x[0]), float(x[1]), float(x[3]),  datetime.strptime(" ".join([x[5], x[6]]), '%Y-%m-%d %H:%M:%S')])
+
+
+    # !!! wholeTextFiles is not memory safe for big files or for a big amount of files
+    # but textFile doesn't provide filename and work much slower on a big amount of small files
+    data = spark.sparkContext.wholeTextFiles(trajectory_dir).flatMap(flatten)\
+                                .map(lambda x: [current_run_timestamp, user_id, os.path.basename(x[7]).replace('.plt',''), float(x[0]), float(x[1]), float(x[3]),  datetime.strptime(" ".join([x[5], x[6]]), '%Y-%m-%d %H:%M:%S')])
 
     return spark.createDataFrame(data, trajectory_schema)
 
 
-def ingest(input_folder: str, output_folder: str) -> bool:
+def ingest(input_folder: str, output_folder: str, spark_filename: str = "geo_table.parquet") -> bool:
 
     if not os.path.isdir(input_folder):
         logger.error("Input folder doesn't exit")
@@ -98,33 +105,31 @@ def ingest(input_folder: str, output_folder: str) -> bool:
 
         current_run_timestamp = datetime.now()
 
+
+
         # iterate over all folders in the dataset, folder name means user ID
+        i = 0
         for sub_folder in glob.iglob(os.path.join(input_folder, "Data", "[!.]*")):
             user_id = os.path.basename(sub_folder)
-            print("processing user {}".format(user_id))
+            print("processing user {}, number {}".format(user_id, i))
 
             # read labels
             labels_df = read_labels(spark, os.path.join(sub_folder, "labels.txt"), labels_schema)
 
             # read trajectories from current user, merge with labels and save to user_trajectories_df
             # iterate over all files in the folder, file name means Trajectory ID
-            user_trajectories_df = None
-
-            for file in glob.iglob(os.path.join(sub_folder, "Trajectory", "*.plt")):
-
-                df = read_user_trajectory(spark, file, trajectory_schema, user_id, current_run_timestamp)
-                df = merge_labels(labels_df, df)
-
-                if user_trajectories_df:
-                    user_trajectories_df = user_trajectories_df.union(df)
-                else:
-                    user_trajectories_df = df
+            user_trajectories_df = read_user_trajectories(spark, os.path.join(sub_folder, "Trajectory", "*.plt"), trajectory_schema, user_id, current_run_timestamp)
 
             print("Save to parquet, user {}".format(user_id))
-            user_trajectories_df.write.mode('append').parquet(os.path.join(output_folder, "geo_table.parquet"))
+            user_trajectories_df.write.option("maxRecordsPerFile", 10000).mode('append').parquet(os.path.join(output_folder, spark_filename))
+
+            i = i + 1
+
+        return True
 
     except Exception as e:
         logger.error(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
+        return False
 
 
 if __name__ == '__main__':
