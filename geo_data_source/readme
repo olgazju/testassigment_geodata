@@ -1,0 +1,13 @@
+Input data point
+
+Folder structure:
+
+Geolife Trajectories 1.3 or anyfolder
+----- Data
+
+----------User_ID
+
+-----------------labels.txt
+-----------------Trajectory
+
+------------------------------*.plt files
