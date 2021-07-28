@@ -76,7 +76,7 @@ def read_user_trajectories(spark: Type[SparkSession], trajectory_dir: str, traje
     data = spark.sparkContext.wholeTextFiles(trajectory_dir).flatMap(flatten)\
                                 .map(lambda x: [current_run_timestamp, user_id, os.path.basename(x[7]).replace('.plt',''), float(x[0]), float(x[1]), float(x[3]),  datetime.strptime(" ".join([x[5], x[6]]), '%Y-%m-%d %H:%M:%S')])
 
-    return spark.createDataFrame(data, trajectory_schema)
+    return spark.createDataFrame(data, trajectory_)
 
 
 def ingest(input_folder: str, output_folder: str, spark_filename: str = "geo_table.parquet") -> bool:

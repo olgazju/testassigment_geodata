@@ -49,7 +49,7 @@ def analyse_length_dist(database_folder: str, spark_filename: str = "geo_table.p
         df.createOrReplaceTempView("geo_table")
         df_sql = spark.sql("select UserId, TrajectoryId, Latitude, Longitude, StepTimestamp from geo_table")
         #or direct read without createOrReplaceTempView
-        #df_sql = spark.sql("SELECT UserId, TrajectoryId, Latitude, Longitude, `StepTimestamp` FROM parquet.`geo_table.parquet`")
+        #df_sql = spark.sql("SELECT UserId, TrajectoryId, Latitude, Longitude, StepTimestamp FROM parquet.`geo_table.parquet`")
 
 
         # calculate distance between each trajectory steps one by one using haversine formula 
@@ -71,14 +71,13 @@ def analyse_length_dist(database_folder: str, spark_filename: str = "geo_table.p
         bucketizer = Bucketizer(splits=bins, inputCol="TotalDistance", outputCol="DistCat")
         df_sql_total = bucketizer.setHandleInvalid("keep").transform(df_sql_total)
 
-        udf_foo = udf(lambda x: bucket_names_dict[x], StringType())
-        df_sql_total = df_sql_total.withColumn("DistCat", udf_foo("DistCat"))
+        udf_bucket = udf(lambda x: bucket_names_dict[x], StringType())
+        df_sql_total = df_sql_total.withColumn("DistCat", udf_bucket("DistCat"))
 
         # count trajectory length distribution per bucket for all users
         df_sql_total = df_sql_total.groupby("DistCat").count().withColumnRenamed("count", "TotalDistanceDistribution")
 
         # count distribution in percentage  
-        #df_sql_total = df_sql_total.withColumn("percentage", lit(100) * col("TotalDistanceDistribution")/sum("TotalDistanceDistribution").over(Window.partitionBy(df_sql_total['DistCat'])))
         df_sql_total = df_sql_total.withColumn('percentage', lit(100) * col('TotalDistanceDistribution')/sum('TotalDistanceDistribution').over(Window.partitionBy()))
         df_sql_total.write.format("csv").option("header", "true").save(os.path.join(database_folder, "length_{}.csv".format(time_salt)))
 
