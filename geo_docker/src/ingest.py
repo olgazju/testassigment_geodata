@@ -120,8 +120,6 @@ def ingest(input_folder: str, output_folder: str) -> bool:
                 else:
                     user_trajectories_df = df
 
-            user_trajectories_df.show()
-
             print("Save to parquet, user {}".format(user_id))
             user_trajectories_df.write.mode('append').parquet(os.path.join(output_folder, "geo_table.parquet"))
 
@@ -136,8 +134,8 @@ if __name__ == '__main__':
     app_parser.add_argument('input_folder',
                        nargs='?',
                        type=str,
-                       default="../../test_data",
-                       #default="../../geo_data_source/Geolife Trajectories 1.3",
+                       #default="../../test_data",
+                       default="../../geo_data_source/Geolife Trajectories 1.3",
                        help='local path to GEO dataset')
 
     app_parser.add_argument('output_folder',
