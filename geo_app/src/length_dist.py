@@ -10,12 +10,12 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import DoubleType, StringType
 from pyspark.sql.window import Window
 from pyspark.sql.functions import concat, col, lit, coalesce, create_map, udf, lag, sum
-from pyspark.ml.feature import Bucketizer
+#from pyspark.ml.feature import Bucketizer
 
 from pyspark.sql.utils import AnalysisException
 
 from haversine import haversine
-from common import save_pie_plot
+from common import save_pie_plot, bucketize
 
 logger = logging.getLogger('spark')
 logging.basicConfig(
@@ -69,12 +69,8 @@ def analyse_length_dist(database_folder: str, spark_filename: str = "geo_table.p
         # add buckets as DistCat column according to TotalDistance
         bins = [0, 5, 20, 100, float('Inf')] 
         bucket_names = ['<5', '5-20', '20-100', '>=100']
-        bucket_names_dict = {float(i): s for i, s in enumerate(bucket_names)}
-        bucketizer = Bucketizer(splits=bins, inputCol="TotalDistance", outputCol="DistCat")
-        df_sql_total = bucketizer.setHandleInvalid("keep").transform(df_sql_total)
 
-        udf_bucket = udf(lambda x: bucket_names_dict[x], StringType())
-        df_sql_total = df_sql_total.withColumn("DistCat", udf_bucket("DistCat"))
+        df_sql_total = bucketize(df_sql_total, bins, bucket_names, "TotalDistance", "DistCat")
 
         # count trajectory length distribution per bucket for all users
         df_sql_total = df_sql_total.groupby("DistCat").count().withColumnRenamed("count", "TotalDistanceDistribution")

@@ -15,7 +15,7 @@ from pyspark.ml.feature import Bucketizer
 from pyspark.sql.utils import AnalysisException
 
 from haversine import haversine
-from common import save_pie_plot
+from common import save_pie_plot, bucketize
 
 logger = logging.getLogger('spark')
 logging.basicConfig(
@@ -76,31 +76,24 @@ def analyse_time_gross_dist(database_folder: str, spark_filename: str = "geo_tab
         df_sql = df_sql.withColumn("Speed", (F.col("StepTimestampDiff") / F.col("Distance")))\
                         .fillna({'Speed':0.0})
 
-        bins = [-float('Inf'), 0.05, float('Inf')] 
-        bucket_names = ['stop', 'not-stop']
-        bucket_names_dict = {float(i): s for i, s in enumerate(bucket_names)}
-        bucketizer = Bucketizer(splits=bins, inputCol="Speed", outputCol="SpeedCat")
-        df_sql = bucketizer.setHandleInvalid("keep").transform(df_sql)
+        df_sql = bucketize(df_sql, 
+                            [-float('Inf'), 0.05, float('Inf')], 
+                            ['stop', 'not-stop'], 
+                            "Speed", 
+                            "SpeedCat").fillna({'StepTimestampDiff':0.0})
 
-        udf_bucket = F.udf(lambda x: bucket_names_dict[x], StringType())
-        df_sql = df_sql.withColumn("SpeedCat", udf_bucket("SpeedCat")).fillna({'StepTimestampDiff':0.0})
 
         print("1")
         # choose only non stop steps
         df_diff = df_sql.filter(df_sql.SpeedCat == 'not-stop')
         print("2")
-        #df_grouped = df_sql.groupBy("UserId", "TrajectoryId", "SpeedCat").sum('StepTimestampDiff').withColumnRenamed("sum(StepTimestampDiff)", "TotalTime")
 
-        # refactoring
         # add buckets as TimeCat column according to TimeDiffHours
-        binst = [-float('Inf'), 1, 6, 12, float('Inf')] 
-        bucket_namest = ['<1', '1-6', '6-12', '>=12']
-        bucket_names_dictt = {float(i): s for i, s in enumerate(bucket_namest)}
-        bucketizert = Bucketizer(splits=binst, inputCol="StepTimestampDiff", outputCol="TimeCat")
-        df_diff = bucketizert.setHandleInvalid("keep").transform(df_diff)
-
-        udf_buckett = F.udf(lambda x: bucket_names_dictt[x], StringType())
-        df_diff = df_diff.withColumn("TimeCat", udf_buckett("TimeCat"))
+        df_diff = bucketize(df_diff, 
+                            [-float('Inf'), 1, 6, 12, float('Inf')], 
+                            ['<1', '1-6', '6-12', '>=12'], 
+                            "StepTimestampDiff", 
+                            "TimeCat")
 
         # count gross time distribution per bucket for all users
         df_diff = df_diff.groupby("TimeCat").count().withColumnRenamed("count", "TimeNetDistribution")
