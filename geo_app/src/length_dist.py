@@ -13,6 +13,8 @@ from pyspark.sql.window import Window
 from pyspark.sql.functions import concat, col, lit, coalesce, create_map, udf, lag, sum
 from pyspark.ml.feature import Bucketizer
 
+from pyspark.sql.utils import AnalysisException
+
 from haversine import haversine
 
 logger = logging.getLogger('spark')
@@ -95,6 +97,11 @@ def analyse_length_dist(database_folder: str, spark_filename: str = "geo_table.p
 
 
         return True
+        
+    except AnalysisException as e:
+        logger.error("Failed to analyze a SQL query plan. Check if parquet file exists")
+        logger.error(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
+        return False
 
     except Exception as e:
         logger.error(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))

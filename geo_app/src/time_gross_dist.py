@@ -13,6 +13,8 @@ from pyspark.sql.window import Window
 import pyspark.sql.functions as F
 from pyspark.ml.feature import Bucketizer
 
+from pyspark.sql.utils import AnalysisException
+
 logger = logging.getLogger('spark')
 logging.basicConfig(
     format="%(asctime)-15s [%(levelname)s] %(funcName)s: %(message)s")
@@ -68,7 +70,10 @@ def analyse_time_gross_dist(database_folder: str, spark_filename: str = "geo_tab
         plt.savefig(os.path.join(database_folder, "time_gross_{}.png".format(time_salt)))
 
         return True
-
+    except AnalysisException as e:
+        logger.error("Failed to analyze a SQL query plan. Check if parquet file exists")
+        logger.error(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
+        return False
     except Exception as e:
         logger.error(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
         return False

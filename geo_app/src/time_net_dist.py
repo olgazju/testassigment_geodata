@@ -13,6 +13,8 @@ from pyspark.sql.window import Window
 import pyspark.sql.functions as F
 from pyspark.ml.feature import Bucketizer
 
+from pyspark.sql.utils import AnalysisException
+
 from haversine import haversine
 
 logger = logging.getLogger('spark')
@@ -122,6 +124,10 @@ def analyse_time_gross_dist(database_folder: str, spark_filename: str = "geo_tab
 
         return True
 
+    except AnalysisException as e:
+        logger.error("Failed to analyze a SQL query plan. Check if parquet file exists")
+        logger.error(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
+        return False
     except Exception as e:
         logger.error(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__))
         return False
