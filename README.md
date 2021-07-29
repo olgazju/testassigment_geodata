@@ -143,3 +143,15 @@ time_net_{timestamp}.png
 
 `cd geo_app\src
 pytest`
+
+## Results
+
+#### Trip length Distribution, KM
+
+![alt text](geo_data_output/length_1627513017.png)
+
+#### Gross Time Distribution, H
+
+![alt text](geo_data_output/time_gross_1627515965.png)
+
+#### Net Time Distribution, H
