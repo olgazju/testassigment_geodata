@@ -155,3 +155,5 @@ pytest`
 ![alt text](geo_data_output/time_gross_1627515965.png)
 
 #### Net Time Distribution, H
+
+![alt text](geo_data_output/time_net_1627564638.png)
