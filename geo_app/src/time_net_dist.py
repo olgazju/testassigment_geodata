@@ -52,10 +52,11 @@ def analyse_time_gross_dist(database_folder: str, spark_filename: str = "geo_tab
         spark_context = SparkContext.getOrCreate(SparkConf().setMaster("local[*]").setAppName("geoAppLengthDistAnalysis"))
         spark = SparkSession(spark_context)
         spark.sparkContext.setLogLevel("ERROR")
+
         df=spark.read.parquet(os.path.join(database_folder, spark_filename))
 
         df.createOrReplaceTempView("geo_table")
-        df_sql = spark.sql("select UserId, TrajectoryId, latitude, Longitude, StepTimestamp from geo_table")
+        df_sql = spark.sql("select UserId, TrajectoryId, Latitude, Longitude, StepTimestamp from geo_table")
 
         udf_get_haversine_dist = F.udf(get_haversine_dist, DoubleType())
 
@@ -63,14 +64,13 @@ def analyse_time_gross_dist(database_folder: str, spark_filename: str = "geo_tab
         windowSpec = Window.partitionBy([F.col(x) for x in column_list]).orderBy("StepTimestamp")
 
         #get distance of each step in km
-        df_sql = df_sql.withColumn("Distance", udf_get_haversine_dist("latitude", "Longitude", F.lag("latitude", 1).over(windowSpec), F.lag("Longitude", 1).over(windowSpec)))\
+        df_sql = df_sql.withColumn("Distance", udf_get_haversine_dist("Latitude", "Longitude", F.lag("Latitude", 1).over(windowSpec), F.lag("Longitude", 1).over(windowSpec)))\
                      .fillna({'Distance':0.0})\
-                     .drop("latitude", "Longitude")
+                     .drop("Latitude", "Longitude")
 
         # get time of each step in hours
         udf_get_time_diff = F.udf(get_time_diff, DoubleType())
-        df_sql = df_sql.withColumn("StepTimestampDiff", udf_get_time_diff( F.lag("StepTimestamp", 1).over(windowSpec), F.col("StepTimestamp")))\
-                        .drop("latitude", "Longitude")
+        df_sql = df_sql.withColumn("StepTimestampDiff", udf_get_time_diff( F.lag("StepTimestamp", 1).over(windowSpec), F.col("StepTimestamp")))
 
         #get speed on each step in km/h
         df_sql = df_sql.withColumn("Speed", (F.col("StepTimestampDiff") / F.col("Distance")))\
@@ -82,11 +82,8 @@ def analyse_time_gross_dist(database_folder: str, spark_filename: str = "geo_tab
                             "Speed", 
                             "SpeedCat").fillna({'StepTimestampDiff':0.0})
 
-
-        print("1")
         # choose only non stop steps
         df_diff = df_sql.filter(df_sql.SpeedCat == 'not-stop')
-        print("2")
 
         # add buckets as TimeCat column according to TimeDiffHours
         df_diff = bucketize(df_diff, 

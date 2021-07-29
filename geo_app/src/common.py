@@ -25,3 +25,6 @@ def bucketize(geo_df: Type[DataFrame], bins: list, bucket_names: list, inputCol:
 
     udf_buckett = F.udf(lambda x: bucket_names_dict[x], StringType())
     return geo_df.withColumn(outputCol, udf_buckett(outputCol))
+
+
+
