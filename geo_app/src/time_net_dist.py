@@ -4,7 +4,6 @@ import logging
 import traceback
 import time
 
-import matplotlib.pyplot as plt
 from pyspark import SparkConf
 from pyspark.context import SparkContext
 from pyspark.sql import SparkSession
@@ -16,6 +15,7 @@ from pyspark.ml.feature import Bucketizer
 from pyspark.sql.utils import AnalysisException
 
 from haversine import haversine
+from common import save_pie_plot
 
 logger = logging.getLogger('spark')
 logging.basicConfig(
@@ -113,14 +113,9 @@ def analyse_time_gross_dist(database_folder: str, spark_filename: str = "geo_tab
         
         # pie plot
         labels = [i['TimeCat'] for i in df_diff.collect()]
-        sizes = [i['percentage'] for i in df_diff.collect()]
+        proportions = [i['percentage'] for i in df_diff.collect()]
 
-        fig1, ax1 = plt.subplots()
-        ax1.pie(sizes, labels=labels, autopct='%1.1f%%',
-                shadow=True, startangle=90)
-        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-
-        plt.savefig(os.path.join(database_folder, "time_net_{}.png".format(time_salt)))
+        save_pie_plot(proportions, labels, os.path.join(database_folder, "time_net_{}.png".format(time_salt)))
 
         return True
 

@@ -4,7 +4,6 @@ import logging
 import traceback
 import time
 
-import matplotlib.pyplot as plt
 from pyspark import SparkConf
 from pyspark.context import SparkContext
 from pyspark.sql import SparkSession
@@ -12,8 +11,9 @@ from pyspark.sql.types import LongType, StringType
 from pyspark.sql.window import Window
 import pyspark.sql.functions as F
 from pyspark.ml.feature import Bucketizer
-
 from pyspark.sql.utils import AnalysisException
+
+from common import save_pie_plot
 
 logger = logging.getLogger('spark')
 logging.basicConfig(
