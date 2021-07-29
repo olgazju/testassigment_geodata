@@ -13,22 +13,36 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType, StructField, DoubleType, StringType, TimestampType, IntegerType
 from pyspark.sql.functions import concat, col, lit, coalesce, create_map
 
+LABELS_EXCEPTION = 'Labels.txt file exists but 0 data was read'
+
 logger = logging.getLogger('spark')
 logging.basicConfig(
     format="%(asctime)-15s [%(levelname)s] %(funcName)s: %(message)s")
 
 
-def read_labels(spark: Type[SparkSession], labels_filename: str, labels_schema: Type[StructType]) -> Type[DataFrame]:
-
+def read_labels(spark: Type[SparkSession], labels_filename: str) -> Type[DataFrame]:
+    '''
+    Read transportation modes from lables files and convert them to categorical values
+    '''
     if os.path.exists(labels_filename):
+
+        labels_file_schema = StructType([StructField("StartTime", TimestampType(), True),
+                             StructField("EndTime", TimestampType(), True),
+                             StructField("Mode", StringType(), True)])
+
+        # !!! Spark always switch nullable from False to True on read, use df.na.drop() to drop null values
+
         LABELS = ['walk', 'bike', 'bus', 'car', 'subway','train', 'airplane', 'boat', 'run', 'motorcycle', 'taxi']
         mode_ids = {s : i + 1 for i, s in enumerate(LABELS)}
 
-        labels_df = spark.read.option("header", True).option("timestampFormat", "yyyy/MM/dd HH:mm:ss").option("delimiter", "\t").schema(labels_schema).csv(labels_filename).cache()
+        labels_df = spark.read.option("header", True).option("timestampFormat", "yyyy/MM/dd HH:mm:ss").option("delimiter", "\t").schema(labels_file_schema).csv(labels_filename)
+
+        if len(labels_df.head(1)) == 0: 
+            raise ValueError(LABELS_EXCEPTION)
 
         # map string modes to numeric categories
         mapping_expr  = create_map([lit(x) for x in chain(*mode_ids.items())])
-        labels_df= labels_df.withColumn('Label', coalesce(mapping_expr[labels_df['Mode']], labels_df['Mode']).cast(IntegerType()))
+        labels_df= labels_df.withColumn('Label', coalesce(mapping_expr[labels_df['Mode']], labels_df['Mode']).cast(IntegerType())).drop("Mode")
 
         return labels_df
 
@@ -56,7 +70,7 @@ def flatten(pair):
  
       
 
-def read_user_trajectories(spark: Type[SparkSession], trajectory_dir: str, trajectory_schema: Type[StructType], user_id: str, current_run_timestamp) -> Type[DataFrame]:
+def read_user_trajectories(spark: Type[SparkSession], trajectory_dir: str, user_id: str, current_run_timestamp) -> Type[DataFrame]:
 
     '''
     Data Format:
@@ -70,42 +84,35 @@ def read_user_trajectories(spark: Type[SparkSession], trajectory_dir: str, traje
         2021-07-28 18:02:02| 021| 20070503005908| 28.9177333333333| 118.052183333333| 5134.51443569554| 2007-05-03 00:59:08
     '''
 
+    trajectory_schema = StructType([StructField("IngestionTime", TimestampType(), False),
+                        StructField("UserId", StringType(), False),
+                        StructField("TrajectoryID", StringType(), False),
+                        StructField("Latitude", DoubleType(), True),
+                        StructField("Longitude", DoubleType(), True),
+                        StructField("Altitude", DoubleType(), True),
+                        StructField("StepTimestamp", TimestampType(), True)])
 
     # !!! wholeTextFiles is not memory safe for big files or for a big amount of files
     # but textFile doesn't provide filename and work much slower on a big amount of small files
     data = spark.sparkContext.wholeTextFiles(trajectory_dir).flatMap(flatten)\
                                 .map(lambda x: [current_run_timestamp, user_id, os.path.basename(x[7]).replace('.plt',''), float(x[0]), float(x[1]), float(x[3]),  datetime.strptime(" ".join([x[5], x[6]]), '%Y-%m-%d %H:%M:%S')])
 
-    return spark.createDataFrame(data, trajectory_)
+    return spark.createDataFrame(data, trajectory_schema)
 
 
 def ingest(input_folder: str, output_folder: str, spark_filename: str = "geo_table.parquet") -> bool:
 
     if not os.path.isdir(input_folder):
-        logger.error("Input folder doesn't exit")
+        logger.error("Input folder doesn't exist")
         return False
 
     try:  
-
-        trajectory_schema = StructType([StructField("IngestionTime", TimestampType(), False),
-                                StructField("UserId", StringType(), False),
-                                StructField("TrajectoryID", StringType(), False),
-                                StructField("Latitude", DoubleType(), True),
-                                StructField("Longitude", DoubleType(), True),
-                                StructField("Altitude", DoubleType(), True),
-                                StructField("StepTimestamp", TimestampType(), True)])
-
-        labels_schema = StructType([StructField("StartTime", TimestampType(), False),
-                                    StructField("EndTime", TimestampType(), False),
-                                    StructField("Mode", StringType(), False)])
 
         spark_context = SparkContext.getOrCreate(SparkConf().setMaster("local[*]").setAppName("geoAppIngestion"))
         spark = SparkSession(spark_context)
         spark.sparkContext.setLogLevel("ERROR")
 
         current_run_timestamp = datetime.now()
-
-
 
         # iterate over all folders in the dataset, folder name means user ID
         i = 0
@@ -114,16 +121,20 @@ def ingest(input_folder: str, output_folder: str, spark_filename: str = "geo_tab
             print("processing user {}, number {}".format(user_id, i))
 
             # read labels
-            labels_df = read_labels(spark, os.path.join(sub_folder, "labels.txt"), labels_schema)
+            labels_df = read_labels(spark, os.path.join(sub_folder, "labels.txt"))
 
             # read trajectories from current user, merge with labels and save to user_trajectories_df
             # iterate over all files in the folder, file name means Trajectory ID
-            user_trajectories_df = read_user_trajectories(spark, os.path.join(sub_folder, "Trajectory", "*.plt"), trajectory_schema, user_id, current_run_timestamp)
+            user_trajectories_df = read_user_trajectories(spark, os.path.join(sub_folder, "Trajectory", "*.plt"), user_id, current_run_timestamp)
 
             print("Save to parquet, user {}".format(user_id))
             user_trajectories_df.write.option("maxRecordsPerFile", 10000).mode('append').parquet(os.path.join(output_folder, spark_filename))
 
             i = i + 1
+
+        if i == 0: 
+             logger.error("No data inside input folder")
+             return False
 
         return True
 
@@ -136,14 +147,14 @@ if __name__ == '__main__':
 
     app_parser = argparse.ArgumentParser(description='geoAppIngestion')
 
-    app_parser.add_argument('input_folder',
+    app_parser.add_argument('--input_folder',
                        nargs='?',
                        type=str,
                        #default="../../test_data",
                        default="../../geo_data_source/Geolife Trajectories 1.3",
                        help='local path to GEO dataset')
 
-    app_parser.add_argument('output_folder',
+    app_parser.add_argument('--output_folder',
                             nargs='?',
                             type=str,
                             default="../../geo_data_output",

@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     app_parser = argparse.ArgumentParser(description='geoAppLengthDistAnalysis')
 
-    app_parser.add_argument('database_folder',
+    app_parser.add_argument('--database_folder',
                             nargs='?',
                             type=str,
                             default="../../geo_data_output",

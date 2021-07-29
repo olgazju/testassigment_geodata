@@ -1,0 +1,4 @@
+Start Time	End Time	Transportation Mode
+2007/04/29 12:34:24	2007/04/29 12:53:45	walk
+2007/04/29 22:27:11	2007/04/30 04:28:00	bike
+
