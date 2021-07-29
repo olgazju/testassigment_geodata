@@ -1,18 +1,19 @@
-# testassigment_geodata
-testassigment on Microsoft Geolife Dataset
+# Testassigment Geodata
+Test assigment on Microsoft Geolife Dataset
 
-##How It Works
+## How It Works
 
 Testassigment is based on [Microsoft Geolife Dataset](https://www.microsoft.com/en-us/research/publication/geolife-gps-trajectory-dataset-user-guide/)
 
 Testassigment consist of 4 python modules in geo_app/src folder and tests:
 
-ingest.py - by default read Geolife data from local folder geo_data_source, transform it and save it as geo_table.parquet file to local folder geo_data_output, or input_folder and output_folder should be provided
+**ingest.py** - by default read Geolife data from local folder geo_data_source, transform it and save it as geo_table.parquet file to local folder geo_data_output, or input_folder and output_folder should be provided
 
 **length_dist.py** - by default read geo_table.parquet file (from ingestion stage) as a SQL table from local folder geo_data_output.
 Calculate distribution of trip length in km and save it to local folder geo_data_output as
 
 length_{timestamp}.csv
+
 length_{timestamp}.png
 
 
@@ -20,6 +21,7 @@ length_{timestamp}.png
 Calculate distribution of trip duration time in hours and save it to local folder geo_data_output as
 
 time_gross_{timestamp}.csv
+
 time_gross_{timestamp}.png
 
 
@@ -27,29 +29,38 @@ time_gross_{timestamp}.png
 Calculate distribution of trip duration time without stops in hours and save it to local folder geo_data_output as
 
 time_net_{timestamp}.csv
+
 time_net_{timestamp}.png
 
-human stops were defined as trajectory steps where speed was less than 0.05 km/h
+Human stops were defined as trajectory steps where speed was less than 0.05 km/h
 
 ## Schema 
 
-IngestionTime: TimestampType,
-UserId: StringType,
-TrajectoryID: StringType,
-Latitude: DoubleType,
-Longitude: DoubleType,
-Altitude: DoubleType,
-StepTimestamp: TimestampType,
+IngestionTime: TimestampType,  
+UserId: StringType,  
+TrajectoryID: StringType,  
+Latitude: DoubleType,  
+Longitude: DoubleType,  
+Altitude: DoubleType,  
+StepTimestamp: TimestampType,  
 Label: IntegerType
 
-IngestionTime - data ingestion time, the same time is added to all input data while the script is running
+
+IngestionTime - data ingestion time, the same time is added to all input data while the script is running  
+
 UserId - folder name in Geo Dataset: Geolife Trajectories 1.3/Data/{users}
+
 TrajectoryID - file name of .plt file in Geo Dataset: Geolife Trajectories 1.3/Data/{user}/Trajectory/{.plt}
+
 Latitude - the first column from plt file
+
 Longitude - the second column from plt file
+
 Altitude - the forth column from plt file
+
 StepTimestamp - comdined 6th and 7th columns from file as timestamp = data + time
-Label - merged labels as categories from labels.txt file. Merged by time.
+
+Label - merged labels as categories from labels.txt file. Merged by time
 
 
 3th and and 5th columns from plt according to Geo Dataset User Guide are useless
@@ -70,7 +81,7 @@ source geo_env/bin/activate`
 
 4. Install requirements.txt from geo_app folder
 
-` pip install -r requirements.txt`
+`pip install -r requirements.txt`
 
 5. Run Ingest.py from geo_app/src folder
 
