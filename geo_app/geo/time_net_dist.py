@@ -88,6 +88,8 @@ def analyse_time_net_dist(database_folder: str, spark_filename: str = "geo_table
         # choose only non stop steps
         df_diff = df_sql.filter(df_sql.SpeedCat == 'not-stop')
 
+        df_diff = df_diff.groupby("UserId", "TrajectoryId").sum("StepTimestampDiff").withColumnRenamed("sum(StepTimestampDiff)", "StepTimestampDiff")
+
         # add buckets as TimeCat column according to TimeDiffHours
         df_diff = bucketize(df_diff, 
                             [-float('Inf'), 1, 6, 12, float('Inf')], 
