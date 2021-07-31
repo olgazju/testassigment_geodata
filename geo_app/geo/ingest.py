@@ -108,6 +108,9 @@ def ingest(input_folder: str, output_folder: str, spark_filename: str = "geo_tab
 
     try:  
 
+        print("ingest input folder", input_folder)
+        print("ingest output folder", output_folder)
+
         spark_context = SparkContext.getOrCreate(SparkConf().setMaster("local[*]").setAppName("geoAppIngestion"))
         spark = SparkSession(spark_context)
         spark.sparkContext.setLogLevel("ERROR")
