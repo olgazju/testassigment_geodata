@@ -103,8 +103,6 @@ def analyse_time_net_dist(database_folder: str, spark_filename: str = "geo_table
         # count distribution in percentage  
         df_diff = df_diff.withColumn('percentage', F.lit(100) * F.col('TimeNetDistribution')/F.sum('TimeNetDistribution').over(Window.partitionBy()))
         df_diff.write.format("csv").option("header", "true").save(os.path.join(database_folder, "time_net_{}.csv".format(time_salt)))
-
-        df_diff.show()
         
         # pie plot
         labels = [i['TimeCat'] for i in df_diff.collect()]
