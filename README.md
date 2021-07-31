@@ -85,7 +85,9 @@ You can create your own directory and then use param --input_folder for all scri
 
 `pip install -r requirements.txt`
 
-5. Run Ingest.py from geo_app/geo folder
+5. `cd geo`
+
+6. Run Ingest.py from geo_app/geo folder
 
 default folders:
 
@@ -95,9 +97,9 @@ custom local folders:
 
 `python3 ingest.py --input_folder ../../test_data --output_folder ../../geo_data_output_test`
 
-6. Check geo_data_output or your output table for geo_table.parquet
+7. Check geo_data_output or your output table for geo_table.parquet
 
-7. Run length_dist.py from geo_app/geo folder
+8. Run length_dist.py from geo_app/geo folder
 
 default folders:
 
@@ -107,11 +109,11 @@ custom local folders:
 
 `python3 length_dist.py --database_folder ../../geo_data_output_test`
 
-8. Look at geo_data_output or your output table. You will see 2 new files:
+9. Look at geo_data_output or your output table. You will see 2 new files:
 length_{timestamp}.csv
 length_{timestamp}.png
 
-9. Run time_gross_dist.py from geo_app/geo folder
+10. Run time_gross_dist.py from geo_app/geo folder
 
 default folders:
 
@@ -121,11 +123,11 @@ custom local folders:
 
 `python3 time_gross_dist.py --database_folder ../../geo_data_output_test`
 
-10. Look at geo_data_output or your output table. You will see 2 new files:
+11. Look at geo_data_output or your output table. You will see 2 new files:
 time_gross_{timestamp}.csv
 time_gross_{timestamp}.png
 
-11. Run time_net_dist.py from geo_app/geo folder
+12. Run time_net_dist.py from geo_app/geo folder
 
 default folders:
 
@@ -135,7 +137,7 @@ custom local folders:
 
 `python3 time_net_dist.py --database_folder ../../geo_data_output_test`
 
-12. Look at geo_data_output or your output table. You will see 2 new files:
+13. Look at geo_data_output or your output table. You will see 2 new files:
 
 time_net_{timestamp}.csv
 time_net_{timestamp}.png
