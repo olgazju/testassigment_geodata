@@ -183,7 +183,7 @@ Example of the folder structure:
 
 `./build_and_run_airflow.sh`
 
-5. Go to http://0.0.0.0:8080/home in your browser
+5. Go to http://0.0.0.0:8080/home in your browser. User - admin, password - admin
 
 What should you see:
 ![image](https://user-images.githubusercontent.com/14594349/127751057-8d901680-287b-4769-a0b8-b0071744745c.png)
