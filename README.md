@@ -161,3 +161,35 @@ pytest`
 #### Net Time Distribution, H
 
 ![alt text](geo_data_output/time_net_1627564638.png)
+
+
+## How to run the pipeline
+
+1. Install [Docker](https://www.docker.com/products/docker-desktop)
+
+2. Go to the airflow folder
+
+`cd airflow_docker`
+
+3. Load some data into folder airflow_docker/geo_data_source
+
+This folder is a source folder for a new data. You can copy full Geo Dataset or just part of it
+
+Example of the folder structure:
+
+![image](https://user-images.githubusercontent.com/14594349/127751004-b88b3e67-ec24-477b-a6ab-75b28b72effb.png)
+
+4. Run airflow docker and wait until it starts
+
+`./build_and_run_airflow.sh`
+
+5. Go to http://0.0.0.0:8080/home in your browser
+
+What should you see:
+![image](https://user-images.githubusercontent.com/14594349/127751057-8d901680-287b-4769-a0b8-b0071744745c.png)
+
+6. Trigger the dag and wait until it ends
+
+7. Check airflow_docker/geo_data_output directory for results.
+
+8. Data input folder airflow_docker/geo_data_source must be empty in the end and all input plt files will be copied to airflow_docker/processed_data folder
