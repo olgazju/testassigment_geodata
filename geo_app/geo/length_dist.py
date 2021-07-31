@@ -15,7 +15,10 @@ from pyspark.sql.functions import concat, col, lit, coalesce, create_map, udf, l
 from pyspark.sql.utils import AnalysisException
 
 from haversine import haversine
-from common import save_pie_plot, bucketize
+try:
+    from geo.common import save_pie_plot, bucketize
+except ImportError:
+    from common import save_pie_plot, bucketize
 
 logger = logging.getLogger('spark')
 logging.basicConfig(

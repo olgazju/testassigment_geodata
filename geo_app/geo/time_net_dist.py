@@ -15,7 +15,10 @@ from pyspark.ml.feature import Bucketizer
 from pyspark.sql.utils import AnalysisException
 
 from haversine import haversine
-from common import save_pie_plot, bucketize
+try:
+    from geo.common import save_pie_plot, bucketize
+except ImportError:
+    from common import save_pie_plot, bucketize
 
 logger = logging.getLogger('spark')
 logging.basicConfig(
@@ -39,7 +42,7 @@ def get_time_diff(time1, time2):
         return None   
 
 
-def analyse_time_gross_dist(database_folder: str, spark_filename: str = "geo_table.parquet") -> bool:
+def analyse_time_net_dist(database_folder: str, spark_filename: str = "geo_table.parquet") -> bool:
 
     if not os.path.isdir(database_folder):
         logger.error("Database folder doesn't exit")
@@ -133,4 +136,4 @@ if __name__ == '__main__':
 
     database_folder = args.database_folder
 
-    analyse_time_gross_dist(database_folder)
+    analyse_time_net_dist(database_folder)

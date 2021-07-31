@@ -12,7 +12,10 @@ from pyspark.sql.window import Window
 import pyspark.sql.functions as F
 from pyspark.sql.utils import AnalysisException
 
-from common import save_pie_plot, bucketize
+try:
+    from geo.common import save_pie_plot, bucketize
+except ImportError:
+    from common import save_pie_plot, bucketize
 
 logger = logging.getLogger('spark')
 logging.basicConfig(

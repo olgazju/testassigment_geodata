@@ -28,5 +28,6 @@ COPY entrypoint.sh ${AIRFLOW_HOME}/entrypoint.sh
 
 RUN mkdir -p ${AIRFLOW_HOME}/input
 RUN mkdir -p ${AIRFLOW_HOME}/output
+RUN mkdir -p ${AIRFLOW_HOME}/processed_data
 
 ENTRYPOINT ["/opt/airflow/entrypoint.sh"]
