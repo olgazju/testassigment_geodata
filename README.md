@@ -5,7 +5,7 @@ Test assigment on Microsoft Geolife Dataset
 
 Testassigment is based on [Microsoft Geolife Dataset](https://www.microsoft.com/en-us/research/publication/geolife-gps-trajectory-dataset-user-guide/)
 
-Testassigment consist of 4 python modules in geo_app/src folder and tests:
+Testassigment consist of 4 python modules in geo_app/geo folder and tests:
 
 **ingest.py** - by default read Geolife data from local folder geo_data_source, transform it and save it as geo_table.parquet file to local folder geo_data_output, or input_folder and output_folder should be provided
 
@@ -83,7 +83,7 @@ source geo_env/bin/activate`
 
 `pip install -r requirements.txt`
 
-5. Run Ingest.py from geo_app/src folder
+5. Run Ingest.py from geo_app/geo folder
 
 default folders:
 
@@ -95,7 +95,7 @@ custom local folders:
 
 6. Check geo_data_output or your output table for geo_table.parquet
 
-7. Run length_dist.py from geo_app/src folder
+7. Run length_dist.py from geo_app/geo folder
 
 default folders:
 
@@ -109,7 +109,7 @@ custom local folders:
 length_{timestamp}.csv
 length_{timestamp}.png
 
-9. Run time_gross_dist.py from geo_app/src folder
+9. Run time_gross_dist.py from geo_app/geo folder
 
 default folders:
 
@@ -123,7 +123,7 @@ custom local folders:
 time_gross_{timestamp}.csv
 time_gross_{timestamp}.png
 
-11. Run time_net_dist.py from geo_app/src folder
+11. Run time_net_dist.py from geo_app/geo folder
 
 default folders:
 
@@ -141,7 +141,7 @@ time_net_{timestamp}.png
 
 ## How to run tests
 
-`cd geo_app\src
+`cd geo_app\geo
 pytest`
 
 ## Results
