@@ -75,11 +75,11 @@ You can create your own directory and then use param --input_folder for all scri
 
 3. Create Python enviroment
 
-`cd geo_app
+`cd geo_app`
 
-python3 -m venv geo_env
+`python3 -m venv geo_env`
 
-source geo_env/bin/activate`
+`source geo_env/bin/activate`
 
 4. Install requirements.txt from geo_app folder
 
