@@ -13,7 +13,7 @@ def save_pie_plot(prq_file: str, file_name: str, proportions_name: str, labels_n
 
     df = pd.read_parquet(prq_file)
 
-    proportions = df['percentage'].values
+    proportions = df[proportions_name].values
     labels = df[labels_name].values
 
     fig1, ax1 = plt.subplots()
