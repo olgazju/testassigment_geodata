@@ -12,7 +12,7 @@ Testassigment consist of 4 python modules in geo_app/geo folder and tests:
 **length_dist.py** - by default read geo_table.parquet file (from ingestion stage) as a SQL table from local folder geo_data_output.
 Calculate distribution of trip length in km and save it to local folder geo_data_output as
 
-length_{timestamp}.csv
+length_{timestamp}.parquet
 
 length_{timestamp}.png
 
@@ -20,7 +20,7 @@ length_{timestamp}.png
 **time_gross_dist.py** - by default read geo_table.parquet file (from ingestion stage) as a SQL table from local folder geo_data_output.
 Calculate distribution of trip duration time in hours and save it to local folder geo_data_output as
 
-time_gross_{timestamp}.csv
+time_gross_{timestamp}.parquet
 
 time_gross_{timestamp}.png
 
@@ -28,7 +28,7 @@ time_gross_{timestamp}.png
 **time_net_dist.py** - by default read geo_table.parquet file (from ingestion stage) as a SQL table from local folder geo_data_output.
 Calculate distribution of trip duration time without stops in hours and save it to local folder geo_data_output as
 
-time_net_{timestamp}.csv
+time_net_{timestamp}.parquet
 
 time_net_{timestamp}.png
 
@@ -110,7 +110,7 @@ custom local folders:
 `python3 length_dist.py --database_folder ../../geo_data_output_test`
 
 9. Look at geo_data_output or your output table. You will see 2 new files:
-length_{timestamp}.csv
+length_{timestamp}.parquet
 length_{timestamp}.png
 
 10. Run time_gross_dist.py from geo_app/geo folder
@@ -124,7 +124,7 @@ custom local folders:
 `python3 time_gross_dist.py --database_folder ../../geo_data_output_test`
 
 11. Look at geo_data_output or your output table. You will see 2 new files:
-time_gross_{timestamp}.csv
+time_gross_{timestamp}.parquet
 time_gross_{timestamp}.png
 
 12. Run time_net_dist.py from geo_app/geo folder
@@ -139,7 +139,7 @@ custom local folders:
 
 13. Look at geo_data_output or your output table. You will see 2 new files:
 
-time_net_{timestamp}.csv
+time_net_{timestamp}.parquet
 time_net_{timestamp}.png
 
 
@@ -160,7 +160,7 @@ pytest`
 
 #### Net Time Distribution, H
 
-![alt text](geo_data_output/time_net_1627564638.png)
+![alt text](geo_data_output/time_net_1627773151.png)
 
 
 ## How to run the pipeline
