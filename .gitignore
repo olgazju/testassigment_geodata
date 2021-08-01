@@ -140,3 +140,7 @@ airflow_docker/processed_data
 airflow_docker/geo_data_output
 airflow_docker/geo_data_source/Geolife Trajectories 1.3
 geo_data_output_test
+
+
+airflow_docker/geoutls-1.1-py3-none-any.whl
+airflow_docker/requirements.txt

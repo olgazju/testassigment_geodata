@@ -74,7 +74,7 @@ with DAG(
     ingest_task = ingest_stage()
     length_analysis_task = length_analysis_stage()
     time_gross_analysis_task = time_gross_analysis_stage()
-    time_net_analysis_task = time_net_analysis_stage()
+    #time_net_analysis_task = time_net_analysis_stage()
     get_rid_of_new_data_task = get_rid_of_new_data_stage()
 
 
