@@ -5,10 +5,7 @@ import time
 from chispa.dataframe_comparer import assert_df_equality
 from pyspark.sql.types import StructType, StructField, DoubleType, StringType, TimestampType, IntegerType
 
-#try:
-#    from geo.ingest import read_labels, read_user_trajectories, LABELS_EXCEPTION, merge_labels, ingest
-#except ImportError:
-from geo.ingest import read_labels, read_user_trajectories, LABELS_EXCEPTION, merge_labels, ingest
+from geo import ingest
 
 
 import pytest
@@ -90,12 +87,12 @@ def trajectories_with_labels(spark):
 def test_read_labels(spark, labels):
 
 
-    labels_df = read_labels(spark, os.path.join("mock_data", "Data", "000", "labels.txt"))
+    labels_df = ingest.read_labels(spark, os.path.join("geo", "mock_data", "Data", "000", "labels.txt"))
     assert_df_equality(labels, labels_df)
 
 def test_no_labels(spark):
 
-    labels_df = read_labels(spark, os.path.join("mock_data", "Data", "000", "nolabels.txt"))
+    labels_df = ingest.read_labels(spark, os.path.join("geo", "mock_data", "Data", "000", "nolabels.txt"))
     print(labels_df)
     assert labels_df is None
 
@@ -104,35 +101,35 @@ def test_wrong_labels(spark):
     
     with pytest.raises(ValueError) as excinfo:
 
-        labels_df = read_labels(spark, os.path.join("mock_data", "Data", "000", "labels_wrong.txt"))
+        labels_df = ingest.read_labels(spark, os.path.join("geo", "mock_data", "Data", "000", "labels_wrong.txt"))
 
-    assert LABELS_EXCEPTION in str(excinfo.value)
+    assert ingest.LABELS_EXCEPTION in str(excinfo.value)
 
-'''def test_read_trajectories(spark, trajectories):
+def test_read_trajectories(spark, trajectories):
 
     current_run_timestamp = datetime.strptime("2007-04-29 12:34:24", '%Y-%m-%d %H:%M:%S')
-    trajectories_df = read_user_trajectories(spark, os.path.join("mock_data", "Data", "000", "Trajectory", "*.plt"), "000", current_run_timestamp)
+    trajectories_df = ingest.read_user_trajectories(spark, os.path.join("geo", "mock_data", "Data", "000", "Trajectory", "*.plt"), "000", current_run_timestamp)
 
-    assert_df_equality(trajectories_df, trajectories)'''
+    assert_df_equality(trajectories_df, trajectories)
 
 
 def test_merge_labels(spark, labels, trajectories, trajectories_with_labels):
 
-    merged_df = merge_labels(labels, trajectories)
+    merged_df = ingest.merge_labels(labels, trajectories)
     assert_df_equality(merged_df, trajectories_with_labels)
 
 
 def test_ingest_no_folder(spark):
 
-    assert ingest("fake_folder", "mock_data_output") is False
+    assert ingest.ingest("fake_folder", "mock_data_output") is False
 
     
-#def test_ingest(spark, trajectories_with_labels):
+def test_ingest(spark, trajectories_with_labels):
 
-#    PARQUET_NAME = "geo_table.parquet_" + str(time.time())
-#    result = ingest(os.path.join("mock_data"), "mock_data_output", PARQUET_NAME)
+    PARQUET_NAME = "geo_table.parquet_" + str(time.time())
+    result = ingest.ingest(os.path.join("geo", "mock_data"), os.path.join("geo","mock_data_output"), PARQUET_NAME)
 
-#    assert result is True
+    assert result is True
   
     #df = spark.read.parquet(os.path.join("mock_data_output", PARQUET_NAME))
 
