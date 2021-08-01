@@ -145,8 +145,8 @@ time_net_{timestamp}.png
 
 ## How to run tests
 
-`cd geo_app\geo
-pytest`
+`cd geo_app
+python -m pytest geo`
 
 ## Results
 
