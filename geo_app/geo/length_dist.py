@@ -14,25 +14,15 @@ from pyspark.sql.functions import concat, col, lit, coalesce, create_map, udf, l
 
 from pyspark.sql.utils import AnalysisException
 
-from haversine import haversine
 try:
-    from geo.common import save_pie_plot, bucketize
+    from geo.common import save_pie_plot, bucketize, calculate_distance
 except ImportError:
-    from common import save_pie_plot, bucketize
+    from common import save_pie_plot, bucketize, calculate_distance
 
 logger = logging.getLogger('spark')
 logging.basicConfig(
     format="%(asctime)-15s [%(levelname)s] %(funcName)s: %(message)s")
 
-
-def get_haversine_dist(lat_x: float, long_x: float, lat_y: float, long_y: float) -> float:
-    '''
-    Get distanse in KM
-    '''
-    if not (lat_x is None) and not (long_x is None) and not (lat_y is None) and not (long_y is None):
-        return haversine((lat_x, long_x), (lat_y, long_y))
-    else:
-        return None
 
 
 def analyse_length_dist(database_folder: str, spark_filename: str = "geo_table.parquet") -> bool:
@@ -59,12 +49,7 @@ def analyse_length_dist(database_folder: str, spark_filename: str = "geo_table.p
 
         # calculate distance between each trajectory steps one by one using haversine formula 
         # for latitude and Longitude per user and trajectory
-        udf_get_haversine_dist = udf(get_haversine_dist, DoubleType())
-
-        column_list = ["UserId", "TrajectoryId"]
-        windowSpec = Window.partitionBy([col(x) for x in column_list]).orderBy("StepTimestamp")
-        df_sql = df_sql.withColumn("Distance", udf_get_haversine_dist("latitude", "Longitude", lag("latitude", 1).over(windowSpec), lag("Longitude", 1).over(windowSpec)))\
-                     .fillna({'Distance':0.0})
+        df_sql = calculate_distance(df_sql, ["UserId", "TrajectoryId"], "StepTimestamp")
 
         # sum all distances per user and trajectory
         df_sql_total= df_sql.groupby("UserId", "TrajectoryId").sum("Distance").withColumnRenamed("sum(Distance)", "TotalDistance")
