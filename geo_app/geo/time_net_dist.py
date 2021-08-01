@@ -102,13 +102,14 @@ def analyse_time_net_dist(database_folder: str, spark_filename: str = "geo_table
 
         # count distribution in percentage  
         df_diff = df_diff.withColumn('percentage', F.lit(100) * F.col('TimeNetDistribution')/F.sum('TimeNetDistribution').over(Window.partitionBy()))
-        df_diff.write.format("csv").option("header", "true").save(os.path.join(database_folder, "time_net_{}.csv".format(time_salt)))
-        
-        # pie plot
-        labels = [i['TimeCat'] for i in df_diff.collect()]
-        proportions = [i['percentage'] for i in df_diff.collect()]
 
-        save_pie_plot(proportions, labels, os.path.join(database_folder, "time_net_{}.png".format(time_salt)))
+        df_diff.write.option("maxRecordsPerFile", 10000).parquet(os.path.join(database_folder, "time_net_{}.parquet".format(time_salt)))
+        # pie plot
+
+        prq_file = os.path.join(database_folder, "time_net_{}.parquet".format(time_salt))
+        png_file = os.path.join(database_folder, "time_net_{}.png".format(time_salt))
+
+        save_pie_plot(prq_file, png_file, 'percentage', "TimeCat")
 
         return True
 

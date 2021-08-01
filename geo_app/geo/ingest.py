@@ -130,8 +130,10 @@ def ingest(input_folder: str, output_folder: str, spark_filename: str = "geo_tab
             # iterate over all files in the folder, file name means Trajectory ID
             user_trajectories_df = read_user_trajectories(spark, os.path.join(sub_folder, "Trajectory", "*.plt"), user_id, current_run_timestamp)
 
+            result_df = merge_labels(labels_df, user_trajectories_df)
+
             print("Save to parquet, user {}".format(user_id))
-            user_trajectories_df.write.option("maxRecordsPerFile", 10000).mode('append').parquet(os.path.join(output_folder, spark_filename))
+            result_df.write.option("maxRecordsPerFile", 10000).mode('append').parquet(os.path.join(output_folder, spark_filename))
 
             i = i + 1
 

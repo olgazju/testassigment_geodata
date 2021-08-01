@@ -6,15 +6,22 @@ from pyspark.sql.types import StringType
 import pyspark.sql.functions as F
 from pyspark.ml.feature import Bucketizer
 
+import pandas as pd
 
-def save_pie_plot(proportions: list, labels: list, filename: str):
+
+def save_pie_plot(prq_file: str, file_name: str, proportions_name: str, labels_name: str):
+
+    df = pd.read_parquet(prq_file)
+
+    proportions = df['percentage'].values
+    labels = df[labels_name].values
 
     fig1, ax1 = plt.subplots()
     ax1.pie(proportions, labels=labels, autopct='%1.1f%%',
             shadow=True, startangle=90)
     ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 
-    plt.savefig(filename)
+    plt.savefig(file_name)
 
 
 def bucketize(geo_df: Type[DataFrame], bins: list, bucket_names: list, inputCol: str, outputCol: str):

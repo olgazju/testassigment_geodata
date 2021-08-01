@@ -49,7 +49,7 @@ def analyse_length_dist(database_folder: str, spark_filename: str = "geo_table.p
         spark = SparkSession(spark_context)
         spark.sparkContext.setLogLevel("ERROR")
 
-        df=spark.read.parquet(os.path.join(database_folder, spark_filename))
+        df = spark.read.parquet(os.path.join(database_folder, spark_filename))
 
         df.createOrReplaceTempView("geo_table")
         df_sql = spark.sql("select UserId, TrajectoryId, Latitude, Longitude, StepTimestamp from geo_table")
@@ -80,14 +80,13 @@ def analyse_length_dist(database_folder: str, spark_filename: str = "geo_table.p
 
         # count distribution in percentage  
         df_sql_total = df_sql_total.withColumn('percentage', lit(100) * col('TotalDistanceDistribution')/sum('TotalDistanceDistribution').over(Window.partitionBy()))
-        df_sql_total.write.format("csv").option("header", "true").save(os.path.join(database_folder, "length_{}.csv".format(time_salt)))
-
-        
+        df_sql_total.write.option("maxRecordsPerFile", 10000).parquet(os.path.join(database_folder, "length_{}.parquet".format(time_salt)))
         # pie plot
-        labels = [i['DistCat'] for i in df_sql_total.collect()]
-        proportions = [i['percentage'] for i in df_sql_total.collect()]
 
-        save_pie_plot(proportions, labels, os.path.join(database_folder, "length_{}.png".format(time_salt)))
+        prq_file = os.path.join(database_folder, "length_{}.parquet".format(time_salt))
+        png_file = os.path.join(database_folder, "length_{}.png".format(time_salt))
+
+        save_pie_plot(prq_file, png_file, 'percentage', "DistCat")
 
         return True
         
