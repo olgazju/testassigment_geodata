@@ -131,6 +131,8 @@ def test_ingest(spark, trajectories_with_labels):
 
     assert result is True
   
-    #df = spark.read.parquet(os.path.join("mock_data_output", PARQUET_NAME))
+    df = spark.read.parquet(os.path.join("geo", "mock_data_output", PARQUET_NAME))
 
-    #assert_df_equality(df, trajectories_with_labels)
+    df = df.drop("IngestionTime")
+
+    assert_df_equality(df.drop("IngestionTime"), trajectories_with_labels.drop("IngestionTime"), ignore_nullable=True)
